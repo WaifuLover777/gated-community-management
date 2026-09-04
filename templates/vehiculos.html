@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Vehículos{% endblock %}
+{% block page_title %}Vehículos de Residentes{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <p class="text-muted">{{ vehiculos|length }} vehículos registrados</p>
+  <a href="/residentes/vehiculos/nuevo" class="btn btn-primary">+ Registrar Vehículo</a>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Placa</th><th>Marca / Modelo</th><th>Color</th><th>Residente</th><th>Casa</th></tr>
+      </thead>
+      <tbody>
+        {% for v in vehiculos %}
+        <tr>
+          <td><strong>{{ v.placa }}</strong></td>
+          <td>{{ v.marca }} {{ v.modelo }}</td>
+          <td>{{ v.color or '—' }}</td>
+          <td>{{ v.residente_nombre }}</td>
+          <td><span class="badge badge-purple">{{ v.casa_numero }}</span></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5"><div class="empty"><p>No hay vehículos registrados</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

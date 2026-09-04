@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Usuarios{% endblock %}
+{% block page_title %}Gestión de Usuarios{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-4">
+  <p class="text-muted">Aquí creas los accesos para guardias y residentes</p>
+  <a href="/usuarios/nuevo" class="btn btn-primary">+ Nuevo Usuario</a>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Residente asociado</th><th>Acción</th></tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}
+        <tr>
+          <td><strong>{{ u.nombre }}</strong></td>
+          <td class="text-muted">{{ u.email }}</td>
+          <td>
+            {% if u.rol == 'admin' %}
+              <span class="badge badge-purple">👨‍💼 Admin</span>
+            {% elif u.rol == 'guardia' %}
+              <span class="badge badge-amber">💂 Guardia</span>
+            {% else %}
+              <span class="badge badge-green">👤 Residente</span>
+            {% endif %}
+          </td>
+          <td class="text-muted">{{ u.residente_nombre or '—' }}</td>
+          <td>
+            {% if u.rol != 'admin' %}
+            <a href="/usuarios/eliminar/{{ u.id }}"
+               onclick="return confirm('¿Eliminar usuario {{ u.nombre }}?')"
+               class="btn btn-danger btn-sm">Eliminar</a>
+            {% else %}
+            <span class="text-muted text-sm">Protegido</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card mt-4" style="background:var(--warn-bg);border-color:var(--warn-ring)">
+  <div class="card-body">
+    <p style="font-size:0.875rem;color:var(--warn)">
+      💡 <strong>Para dar acceso a un residente:</strong> primero regístralo en el módulo de Residentes,
+      luego crea aquí un usuario con rol <strong>Residente</strong> y selecciónalo en el campo correspondiente.
+    </p>
+  </div>
+</div>
+{% endblock %}

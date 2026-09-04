@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Cuota Extraordinaria{% endblock %}
+{% block page_title %}Generar Cuota Extraordinaria{% endblock %}
+{% block content %}
+<div class="card" style="max-width:560px">
+  <div class="card-header">
+    <h3>⚡ Cobro Extraordinario</h3>
+    <a href="/pagos/" class="btn btn-outline btn-sm">← Volver</a>
+  </div>
+  <div class="card-body">
+    <p class="text-muted mb-4" style="margin-bottom:1rem">
+      Un cobro único fuera de la alícuota mensual (p. ej. reparación de áreas comunes).
+      Puedes aplicarlo a <strong>todas las casas</strong> o a una casa específica. Solo
+      el mes actual en adelante.
+    </p>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label>Concepto *</label>
+        <input type="text" name="concepto" required minlength="3" maxlength="80"
+               placeholder="Ej: Reparación de piscina">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Monto ($) *</label>
+          <input type="number" name="monto" required min="0.01" step="0.01" placeholder="Ej: 25.00">
+        </div>
+        <div class="form-group">
+          <label>Mes *</label>
+          <select name="mes" id="selMes" required>
+            {% for i in range(1,13) %}
+            <option value="{{ i }}" {{ 'selected' if i == mes_actual }}>{{ meses[i] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Año *</label>
+          <input type="number" name="anio" id="inpAnio" value="{{ anio_actual }}" required
+                 min="{{ anio_actual }}" max="2099">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Aplicar a *</label>
+        <select name="ambito" id="selAmbito" required onchange="toggleCasa()">
+          <option value="todas">Todas las casas</option>
+          <option value="casa">Una casa específica</option>
+        </select>
+      </div>
+      <div class="form-group" id="grpCasa" style="display:none">
+        <label>Casa</label>
+        <select name="casa_id">
+          <option value="">— Seleccionar casa —</option>
+          {% for c in casas %}
+          <option value="{{ c.id }}">{{ c.manzana }}-{{ c.numero }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">✅ Generar Cobro</button>
+        <a href="/pagos/" class="btn btn-outline">Cancelar</a>
+      </div>
+    </form>
+    <script>
+      function toggleCasa() {
+        var amb = document.getElementById('selAmbito').value;
+        document.getElementById('grpCasa').style.display = (amb === 'casa') ? 'block' : 'none';
+      }
+      (function () {
+        var anioActual = {{ anio_actual }}, mesActual = {{ mes_actual }};
+        var selMes = document.getElementById('selMes'),
+            inpAnio = document.getElementById('inpAnio');
+        function ajustarMeses() {
+          var esActual = parseInt(inpAnio.value, 10) === anioActual;
+          for (var i = 0; i < selMes.options.length; i++) {
+            var mes = i + 1, pasado = esActual && mes < mesActual;
+            selMes.options[i].disabled = pasado;
+          }
+          if (selMes.selectedOptions[0] && selMes.selectedOptions[0].disabled) {
+            selMes.value = esActual ? mesActual : 1;
+          }
+        }
+        inpAnio.addEventListener('input', ajustarMeses);
+        ajustarMeses();
+      })();
+    </script>
+  </div>
+</div>
+{% endblock %}

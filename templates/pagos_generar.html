@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Generar Cuotas{% endblock %}
+{% block page_title %}Generar Cuotas Mensuales{% endblock %}
+{% block content %}
+<div class="card" style="max-width:500px">
+  <div class="card-header">
+    <h3>💰 Generar Cuotas por Mes</h3>
+    <a href="/pagos/" class="btn btn-outline btn-sm">← Volver</a>
+  </div>
+  <div class="card-body">
+    <p class="text-muted mb-4" style="margin-bottom:1rem">
+      Se generará una cuota para cada casa registrada según su alícuota asignada.
+      Si ya existe la cuota para ese mes/año, se omitirá. Solo puedes generar
+      cuotas del <strong>mes actual en adelante</strong> (no meses ni años pasados).
+    </p>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Mes *</label>
+          <select name="mes" id="selMes" required>
+            {% for i in range(1,13) %}
+            <option value="{{ i }}" {{ 'selected' if i == mes_actual }}>{{ meses[i] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Año *</label>
+          <input type="number" name="anio" id="inpAnio" value="{{ anio_actual }}" required
+                 min="{{ anio_actual }}" max="2099">
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">✅ Generar Cuotas</button>
+        <a href="/pagos/" class="btn btn-outline">Cancelar</a>
+      </div>
+    </form>
+    <script>
+      (function () {
+        var anioActual = {{ anio_actual }}, mesActual = {{ mes_actual }};
+        var selMes = document.getElementById('selMes'),
+            inpAnio = document.getElementById('inpAnio');
+        
+        function ajustarMeses() {
+          var esActual = parseInt(inpAnio.value, 10) === anioActual;
+          for (var i = 0; i < selMes.options.length; i++) {
+            var mes = i + 1, pasado = esActual && mes < mesActual;
+            selMes.options[i].disabled = pasado;
+          }
+          if (selMes.selectedOptions[0] && selMes.selectedOptions[0].disabled) {
+            selMes.value = esActual ? mesActual : 1;
+          }
+        }
+        inpAnio.addEventListener('input', ajustarMeses);
+        ajustarMeses();
+      })();
+    </script>
+  </div>
+</div>
+{% endblock %}

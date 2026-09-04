@@ -1,0 +1,236 @@
+{% extends "guardia/base_guardia.html" %}
+{% block title %}Puesto de control{% endblock %}
+{% block page_title %}Puesto de control — Garita inteligente{% endblock %}
+{% block content %}
+
+<div class="card" style="max-width:760px">
+  <div class="card-header" style="gap:.5rem;flex-wrap:wrap">
+    <h3 style="margin-right:auto">📷 Cámara</h3>
+    <select id="camara" class="btn-outline" style="padding:4px 8px;max-width:280px">
+      <option value="">Cámara por defecto</option>
+    </select>
+  </div>
+  <div class="card-body">
+    <p id="cam-error" class="text-sm" style="color:#b42318"></p>
+    <p class="text-sm text-muted">
+      Elige una cámara de la lista (el navegador pedirá permiso). Apunta y usa los
+      botones para escanear. Si no hay cámara, usa “Subir imagen”.
+    </p>
+    <div style="background:#000;border-radius:10px;overflow:hidden;min-height:220px;display:flex;align-items:center;justify-content:center">
+      <video id="video" autoplay playsinline muted
+             style="max-width:100%;max-height:360px"></video>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="max-width:760px;margin-top:1rem">
+  <div class="card-header"><h3>🔳 Escaneo de QR (visita / residente / autorizado)</h3></div>
+  <div class="card-body">
+    <p class="text-sm text-muted">Apunta la cámara al QR o sube una imagen del código.</p>
+    <div class="flex gap-2 mt-4" style="flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="escanearCamara()">🔍 Escanear QR (cámara)</button>
+      <label class="btn btn-outline" style="cursor:pointer">
+        📤 Subir imagen QR
+        <input type="file" id="archivo" accept="image/*" style="display:none" onchange="escanearArchivo()">
+      </label>
+    </div>
+    <div id="resultado" style="margin-top:1rem"></div>
+  </div>
+</div>
+
+<div class="card" style="max-width:760px;margin-top:1rem">
+  <div class="card-header"><h3>🚗 Lectura de placas (frontal / trasera)</h3></div>
+  <div class="card-body">
+    <p class="text-sm text-muted">Escribe las placas, apunta la cámara o sube una foto del
+       coche: si dejas el campo vacío, se lee la placa de la imagen (foto subida o frame).</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+      <div class="form-group">
+        <label>Placa frontal</label>
+        <input type="text" id="pf" placeholder="ABC-1234" style="text-transform:uppercase">
+      </div>
+      <div class="form-group">
+        <label>Placa trasera</label>
+        <input type="text" id="pt" placeholder="ABC-1234" style="text-transform:uppercase">
+      </div>
+    </div>
+    <div class="flex gap-2 mt-4" style="flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="leerPlacas('entrada')">⬇️ Registrar entrada</button>
+      <button class="btn btn-outline" onclick="leerPlacas('salida')">⬆️ Registrar salida</button>
+      <label class="btn btn-outline" style="cursor:pointer">
+        📤 Subir foto del coche
+        <input type="file" id="archivo_placa" accept="image/*" style="display:none"
+               onchange="document.getElementById('placa_file').textContent = this.files[0] ? this.files[0].name : ''">
+      </label>
+      <span id="placa_file" class="text-sm text-muted" style="align-self:center"></span>
+    </div>
+    <div id="resultado_placas" style="margin-top:1rem"></div>
+  </div>
+</div>
+
+<div class="card" style="max-width:760px;margin-top:1rem">
+  <div class="card-header"><h3>🙂 Reconocimiento facial (cabina / ocupantes)</h3></div>
+  <div class="card-body">
+    <p class="text-sm text-muted">Apunta la cámara a la cabina para identificar al
+       conductor y acompañantes contra los residentes enrolados.</p>
+    <div class="flex gap-2 mt-4" style="flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="escanearRostroCam()">🔍 Identificar (cámara)</button>
+      <label class="btn btn-outline" style="cursor:pointer">
+        📤 Subir foto de cabina
+        <input type="file" id="archivo_rostro" accept="image/*" style="display:none" onchange="escanearRostroArchivo()">
+      </label>
+    </div>
+    <div id="resultado_rostro" style="margin-top:1rem"></div>
+  </div>
+</div>
+
+<input type="hidden" id="csrf" value="{{ csrf_token() }}">
+<script>
+
+  
+  
+  const video = document.getElementById('video');
+  const camSel = document.getElementById('camara');
+  const errBox = document.getElementById('cam-error');
+  const csrf = () => document.getElementById('csrf').value;
+  let stream = null;
+
+  async function iniciar(deviceId) {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    try {
+      const video = deviceId ? { deviceId: { exact: deviceId } }
+                             : { facingMode: 'environment' };
+      stream = await navigator.mediaDevices.getUserMedia({ video });
+      document.getElementById('video').srcObject = stream;
+      errBox.textContent = '';
+    } catch (e) {
+      stream = null;
+      errBox.textContent = 'No se pudo acceder a la cámara (' + e.name +
+                           '). Usa “Subir imagen”.';
+    }
+  }
+
+  async function listarCamaras() {
+    try {
+      const devs = (await navigator.mediaDevices.enumerateDevices())
+                     .filter(d => d.kind === 'videoinput');
+      if (!devs.length) return;
+      camSel.innerHTML = '';
+      devs.forEach((d, i) => {
+        const o = document.createElement('option');
+        o.value = d.deviceId;
+        o.textContent = d.label || ('Cámara ' + (i + 1));
+        camSel.appendChild(o);
+      });
+    } catch (_) {  }
+  }
+
+  (async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      errBox.textContent = 'Este navegador no permite usar la cámara. Usa “Subir imagen”.';
+      return;
+    }
+    await iniciar();           
+    await listarCamaras();     
+    if (camSel.value) iniciar(camSel.value);
+  })();
+  camSel.addEventListener('change', () => iniciar(camSel.value));
+
+  function capturarFrame() {
+    if (!stream || !video.videoWidth) return Promise.resolve(null);
+    const c = document.createElement('canvas');
+    c.width = video.videoWidth; c.height = video.videoHeight;
+    c.getContext('2d').drawImage(video, 0, 0);
+    return new Promise(res => c.toBlob(res, 'image/jpeg', 0.9));
+  }
+
+  
+  
+  function reducirImagen(file, max = 1280, q = 0.8) {
+    return new Promise(res => {
+      const img = new Image();
+      img.onload = () => {
+        const esc = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * esc);
+        c.height = Math.round(img.height * esc);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(img.src);
+        c.toBlob(b => res(b || file), 'image/jpeg', q);
+      };
+      img.onerror = () => res(file);   
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  function mostrar(res) {
+    const cls = res.ok ? 'alert-success' : 'alert-error';
+    const icon = res.ok ? '✅' : '⛔';
+    document.getElementById('resultado').innerHTML =
+      '<div class="alert ' + cls + '">' + icon + ' ' + res.mensaje +
+      (res.casa ? ' — Casa ' + res.casa : '') + '</div>';
+  }
+
+  async function postJSON(url, fd) {
+    fd.append('csrf_token', csrf());
+    const r = await fetch(url, { method: 'POST', body: fd });
+    return r.json();
+  }
+
+  async function escanearCamara() {
+    const frame = await capturarFrame();
+    if (!frame) { errBox.textContent = 'No hay señal de cámara. Usa “Subir imagen”.'; return; }
+    const fd = new FormData(); fd.append('imagen', frame, 'qr.jpg');
+    mostrar(await postJSON('/guardia/control/qr', fd));
+  }
+  async function escanearArchivo() {
+    const f = document.getElementById('archivo').files[0];
+    if (!f) return;
+    const fd = new FormData(); fd.append('imagen', f);
+    mostrar(await postJSON('/guardia/control/qr', fd));
+  }
+
+  async function leerPlacas(tipo) {
+    const fd = new FormData();
+    fd.append('tipo', tipo);
+    fd.append('placa_frontal', document.getElementById('pf').value);
+    fd.append('placa_trasera', document.getElementById('pt').value);
+    const f = document.getElementById('archivo_placa').files[0];
+    if (f) {
+      fd.append('img_frontal', await reducirImagen(f), 'placa.jpg');
+    } else {
+      const frame = await capturarFrame();
+      if (frame) fd.append('img_frontal', frame, 'placa.jpg');
+    }
+    const res = await postJSON('/guardia/control/placas', fd);
+    const cls = res.ok ? 'alert-success' : 'alert-error';
+    const icon = res.alerta ? '🚨' : (res.ok ? '✅' : '⛔');
+    document.getElementById('resultado_placas').innerHTML =
+      '<div class="alert ' + cls + '">' + icon + ' ' + res.mensaje + '</div>';
+  }
+
+  async function postRostro(fd) {
+    const res = await postJSON('/guardia/control/rostro', fd);
+    const cls = res.ok ? 'alert-success' : 'alert-error';
+    const icon = res.alerta ? '🚨' : (res.ok ? '✅' : '⛔');
+    let html = '<div class="alert ' + cls + '">' + icon + ' ' + res.mensaje;
+    if (res.ocupantes && res.ocupantes.length) {
+      html += '<ul style="margin:6px 0 0 18px">';
+      res.ocupantes.forEach(o => html += '<li>' + o.nombre + ' (' + o.score + ')</li>');
+      html += '</ul>';
+    }
+    document.getElementById('resultado_rostro').innerHTML = html + '</div>';
+  }
+  async function escanearRostroCam() {
+    const frame = await capturarFrame();
+    if (!frame) { errBox.textContent = 'No hay señal de cámara. Usa “Subir foto”.'; return; }
+    const fd = new FormData(); fd.append('imagen', frame, 'cabina.jpg');
+    postRostro(fd);
+  }
+  async function escanearRostroArchivo() {
+    const f = document.getElementById('archivo_rostro').files[0];
+    if (!f) return;
+    const fd = new FormData(); fd.append('imagen', await reducirImagen(f), 'cabina.jpg');
+    postRostro(fd);
+  }
+</script>
+{% endblock %}

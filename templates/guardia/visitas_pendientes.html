@@ -1,0 +1,60 @@
+{% extends "guardia/base_guardia.html" %}
+{% block title %}Visitas Pendientes{% endblock %}
+{% block page_title %}Visitas Autorizadas — Pendientes de Ingreso{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-4">
+  <p class="text-muted text-sm">
+    {{ visitas|length }} visita{{ 's' if visitas|length != 1 else '' }} en cola
+  </p>
+  <button onclick="location.reload()" class="btn btn-outline btn-sm">↺ Actualizar</button>
+</div>
+
+{% if visitas %}
+<div style="display:flex;flex-direction:column;gap:0.875rem">
+  {% for v in visitas %}
+  <div style="background:var(--surface);border-radius:12px;border:1px solid var(--border);
+              box-shadow:var(--sh2);padding:1rem 1.25rem;
+              display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem">
+        <span style="font-weight:700;font-size:1rem">{{ v.nombre_visitante }}</span>
+        <span class="badge badge-amber">⏳ Pendiente</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:1rem;font-size:0.8rem;color:var(--text-muted)">
+        <span>🏠 <strong>{{ v.manzana }}-{{ v.casa_numero }}</strong></span>
+        {% if v.motivo %}<span>📋 {{ v.motivo }}</span>{% endif %}
+        {% if v.placa_vehiculo %}<span>🚗 <strong style="font-family:monospace">{{ v.placa_vehiculo }}</strong></span>{% endif %}
+        {% if v.cedula_visitante %}<span>🪪 {{ v.cedula_visitante }}</span>{% endif %}
+        <span>🕐 Solicitado {{ v.fecha_creacion|dt('%d/%m %H:%M') }}</span>
+      </div>
+      {% if v.autorizado_por %}
+      <p style="font-size:0.75rem;color:var(--text-sub);margin-top:0.25rem">Autorizado por: {{ v.autorizado_por }}</p>
+      {% endif %}
+    </div>
+    <form method="POST" action="/guardia/visitas/autorizar/{{ v.id }}" style="flex-shrink:0">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit"
+              style="background:var(--ok);color:#fff;border:none;border-radius:10px;
+                     padding:0.75rem 1.25rem;font-size:0.875rem;font-weight:600;
+                     cursor:pointer;white-space:nowrap"
+              onclick="return confirm('¿Autorizar entrada de {{ v.nombre_visitante }}?')">
+        ✅ Autorizar Entrada
+      </button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="card">
+  <div style="text-align:center;padding:4rem 2rem;color:var(--text-muted)">
+    <div style="font-size:3rem;margin-bottom:0.75rem">🟢</div>
+    <p style="font-size:1rem;font-weight:600;color:var(--text);margin-bottom:0.5rem">Sin visitas en cola</p>
+    <p style="font-size:0.875rem">No hay visitas pre-autorizadas pendientes de ingreso</p>
+  </div>
+</div>
+{% endif %}
+
+{% include "_auto_refresh.html" %}
+{% endblock %}

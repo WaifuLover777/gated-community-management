@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ingresar — Villa Los Ceibos</title>
+  <script>
+    (function(){
+      var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      document.documentElement.setAttribute('data-theme',t);
+    })();
+  </script>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <style>
+    :root { --accent: #6366f1; --accent-dark: #4f46e5; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 1.5rem;
+      background: var(--bg);
+    }
+    .login-wrap {
+      width: 100%; max-width: 400px;
+    }
+    .login-brand {
+      text-align: center; margin-bottom: 2rem;
+    }
+    .login-brand .brand-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 64px; height: 64px; border-radius: 18px;
+      background: var(--accent); font-size: 1.75rem;
+      box-shadow: 0 8px 24px var(--accent-ring);
+      margin-bottom: 1rem;
+    }
+    .login-brand h1 {
+      font-size: 1.375rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em;
+    }
+    .login-brand p {
+      font-size: 0.835rem; color: var(--text-muted); margin-top: 3px;
+    }
+    .login-card {
+      background: var(--surface); border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+      padding: 2rem;
+      transition: background var(--t), border-color var(--t);
+    }
+    .login-card .form-group { margin-bottom: 0.875rem; }
+    .login-card .form-group label { color: var(--text-muted); font-weight: 500; }
+    .btn-login {
+      width: 100%; padding: 0.65rem; margin-top: 0.25rem;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--r); font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      transition: background var(--t), box-shadow var(--t);
+    }
+    .btn-login:hover { background: var(--accent-dark); box-shadow: 0 4px 12px var(--accent-ring); }
+    .divider {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 1.25rem 0 1rem; color: var(--text-sub); font-size: 0.775rem;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; border-top: 1px solid var(--border);
+    }
+    .btn-register {
+      display: block; width: 100%; padding: 0.6rem; text-align: center;
+      background: var(--surface); color: var(--accent);
+      border: 1.5px solid var(--accent); border-radius: var(--r);
+      font-size: 0.855rem; font-weight: 600; text-decoration: none;
+      transition: background var(--t);
+    }
+    .btn-register:hover { background: var(--accent-bg); }
+    .theme-row {
+      display: flex; justify-content: center; margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-brand">
+      <div class="brand-icon">🏘️</div>
+      <h1>Villa Los Ceibos</h1>
+      <p>Sistema de Gestión Residencial</p>
+    </div>
+
+    <div class="login-card">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}" style="margin-bottom:1rem">
+            {{ '✅' if category == 'success' else '⚠️' }} {{ message }}
+          </div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+          <label>Correo electrónico</label>
+          <input type="email" name="email" placeholder="tu@correo.com" required autofocus>
+        </div>
+        <div class="form-group" style="margin-bottom:1.25rem">
+          <label>Contraseña</label>
+          <input type="password" name="password" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn-login">Ingresar al sistema</button>
+      </form>
+
+      <div class="divider">¿Eres residente nuevo?</div>
+      <a href="/registro" class="btn-register">🔑 PIN de registro de residente</a>
+    </div>
+
+    <div class="theme-row">
+      <button class="btn-theme" onclick="toggleTheme()" title="Cambiar tema" style="gap:6px;width:auto;padding:6px 12px;font-size:0.775rem;color:var(--text-muted)">
+        <span class="icon-moon">🌙</span>
+        <span class="icon-sun">☀️</span>
+        <span id="theme-label" style="margin-left:2px"></span>
+      </button>
+    </div>
+  </div>
+
+<script>
+  function toggleTheme() {
+    var html = document.documentElement;
+    var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    document.getElementById('theme-label').textContent = next === 'dark' ? 'Modo oscuro' : 'Modo claro';
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    var t = document.documentElement.getAttribute('data-theme');
+    document.getElementById('theme-label').textContent = t === 'dark' ? 'Modo oscuro' : 'Modo claro';
+  });
+</script>
+</body>
+</html>

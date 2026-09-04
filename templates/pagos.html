@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Pagos y Cuotas{% endblock %}
+{% block page_title %}Pagos y Cuotas{% endblock %}
+{% block content %}
+
+{% if totales %}
+<div class="stats-grid" style="margin-bottom:1.25rem">
+  <div class="stat-card green">
+    <div class="label">Cobrado {{ anio if anio else '(todos)' }}</div>
+    <div class="value">${{ "%.2f"|format(totales.cobrado or 0) }}</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="label">Pendiente</div>
+    <div class="value">${{ "%.2f"|format(totales.pendiente or 0) }}</div>
+  </div>
+  <div class="stat-card red">
+    <div class="label">Vencido</div>
+    <div class="value">${{ "%.2f"|format(totales.vencido or 0) }}</div>
+  </div>
+  <div class="stat-card teal">
+    <div class="label">En revisión</div>
+    <div class="value">${{ "%.2f"|format(totales.en_revision or 0) }}</div>
+  </div>
+</div>
+{% endif %}
+
+<div class="flex items-center justify-between mb-4" style="flex-wrap:wrap;gap:0.75rem">
+  <form class="filters" method="GET" style="margin:0">
+    <div class="form-group">
+      <label>Casa</label>
+      <input type="text" name="casa" value="{{ casa }}" maxlength="20" placeholder="Ej: A-01" style="width:100px">
+    </div>
+    <div class="form-group">
+      <label>Año</label>
+      <select name="anio" style="width:110px">
+        <option value="" {{ 'selected' if not anio }}>Todos</option>
+        {% for a in anios %}
+        <option value="{{ a }}" {{ 'selected' if anio == a }}>{{ a }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Mes</label>
+      <select name="mes" style="width:130px">
+        <option value="">Todos</option>
+        {% for i in range(1,13) %}
+        <option value="{{ i }}" {{ 'selected' if mes|string == i|string }}>{{ meses[i] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Estado</label>
+      <select name="estado" style="width:130px">
+        <option value="">Todos</option>
+        <option value="pendiente" {{ 'selected' if estado == 'pendiente' }}>Pendiente</option>
+        <option value="en_revision" {{ 'selected' if estado == 'en_revision' }}>En revisión</option>
+        <option value="pagado" {{ 'selected' if estado == 'pagado' }}>Pagado</option>
+        <option value="vencido" {{ 'selected' if estado == 'vencido' }}>Vencido</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-outline" style="align-self:flex-end">Filtrar</button>
+  </form>
+  <div class="flex gap-2">
+    <a href="/pagos/reporte" class="btn btn-outline">📊 Reporte</a>
+    <a href="/pagos/extraordinaria" class="btn btn-outline">+ Extraordinaria</a>
+    <a href="/pagos/generar" class="btn btn-primary">+ Generar Cuotas</a>
+  </div>
+</div>
+
+<p class="text-muted text-sm mb-4">
+  ℹ️ Los pagos los realiza el residente desde su portal. Las cuotas vencidas se
+  marcan automáticamente. Aquí verificas las transferencias en revisión.
+</p>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Casa</th><th>Concepto</th><th>Mes</th><th>Año</th><th>Monto</th><th>Estado</th><th>Fecha Pago</th><th>Método</th><th>Comprobante</th><th>Acción</th></tr>
+      </thead>
+      <tbody>
+        {% for c in cuotas %}
+        <tr>
+          <td><span class="badge badge-purple">{{ c.manzana }}-{{ c.casa_numero }}</span></td>
+          <td>
+            {% if c.tipo == 'extraordinaria' %}
+              <span class="badge badge-amber" title="Cuota extraordinaria">⚡ {{ c.concepto }}</span>
+            {% else %}
+              <span class="text-muted text-sm">Alícuota</span>
+            {% endif %}
+          </td>
+          <td>{{ meses[c.mes] }}</td>
+          <td>{{ c.anio }}</td>
+          <td>
+            ${{ "%.2f"|format(c.monto) }}
+            {% if c.recargo_calc and c.recargo_calc > 0 %}
+              <div class="text-sm" style="color:var(--err)">+ ${{ "%.2f"|format(c.recargo_calc) }} mora</div>
+              <div class="text-sm"><strong>Total ${{ "%.2f"|format(c.total) }}</strong></div>
+            {% endif %}
+          </td>
+          <td>
+            {% if c.estado == 'pagado' %}
+              <span class="badge badge-green">Pagado</span>
+            {% elif c.estado == 'vencido' %}
+              <span class="badge badge-red">Vencido</span>
+            {% elif c.estado == 'en_revision' %}
+              <span class="badge badge-teal">En revisión</span>
+            {% else %}
+              <span class="badge badge-amber">Pendiente</span>
+            {% endif %}
+          </td>
+          <td class="text-muted text-sm">{{ c.fecha_pago or '—' }}</td>
+          <td class="text-muted text-sm">{{ c.metodo_pago or '—' }}</td>
+          <td>
+            {% if c.comprobante %}
+              <a href="/static/comprobantes/{{ c.comprobante }}" target="_blank" class="btn btn-outline btn-sm">📎 Ver</a>
+            {% elif c.estado == 'pagado' %}
+              <a href="/pagos/comprobante/{{ c.id }}" class="btn btn-outline btn-sm">PDF</a>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            {% if c.estado == 'en_revision' %}
+            <div class="flex gap-2">
+              <form method="POST" action="/pagos/confirmar/{{ c.id }}" style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-success btn-sm"
+                        onclick="return confirm('¿Confirmar esta transferencia como pagada?')">✅ Confirmar</button>
+              </form>
+              <form method="POST" action="/pagos/rechazar/{{ c.id }}" style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline btn-sm"
+                        onclick="return confirm('¿Rechazar el comprobante? La cuota volverá a pendiente.')">✖ Rechazar</button>
+              </form>
+            </div>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="10"><div class="empty"><p>No hay cuotas con ese filtro. Usa "Generar Cuotas" para crearlas.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

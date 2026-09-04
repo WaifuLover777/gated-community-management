@@ -1,0 +1,61 @@
+{% extends "guardia/base_guardia.html" %}
+{% block title %}Verificar Vehículo{% endblock %}
+{% block page_title %}Verificar Vehículo{% endblock %}
+{% block content %}
+
+<div style="max-width:480px;margin:0 auto">
+  <form method="GET" style="display:flex;gap:0.75rem;margin-bottom:1.5rem">
+    <div class="form-group" style="flex:1;margin:0">
+      <input type="text" name="placa" value="{{ placa }}" maxlength="8"
+             placeholder="Ingresa la placa — Ej: ABC-1234"
+             autofocus autocomplete="off"
+             style="font-size:1.1rem;letter-spacing:0.08em;text-transform:uppercase;font-family:monospace">
+    </div>
+    <button type="submit" class="btn btn-primary" style="align-self:flex-end">Verificar</button>
+  </form>
+
+  {% if not placa %}
+  <div style="text-align:center;padding:3rem 1rem;color:var(--text-muted)">
+    <div style="font-size:3rem">🚗</div>
+    <p style="margin-top:0.75rem;font-size:0.95rem">Ingresa la placa del vehículo para verificar si está autorizado</p>
+  </div>
+
+  {% elif vehiculo %}
+  <div style="background:var(--ok-bg);border:2px solid var(--ok-ring);border-radius:16px;padding:2rem;text-align:center">
+    <div style="font-size:3rem">✅</div>
+    <div style="font-size:1.4rem;font-weight:800;color:var(--ok);margin:0.5rem 0">AUTORIZADO</div>
+    <div style="font-family:monospace;font-size:1.6rem;font-weight:700;color:var(--text);
+                background:var(--surface);border-radius:8px;padding:0.5rem 1.5rem;display:inline-block;
+                border:2px solid var(--ok-ring);margin-bottom:1rem;letter-spacing:0.1em">
+      {{ vehiculo.placa }}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;text-align:left;margin-top:0.5rem">
+      <div style="background:var(--surface);border-radius:8px;padding:0.6rem 0.75rem">
+        <p style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase">Marca</p>
+        <p style="font-weight:600">{{ vehiculo.marca or '—' }}</p>
+      </div>
+      <div style="background:var(--surface);border-radius:8px;padding:0.6rem 0.75rem">
+        <p style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase">Color</p>
+        <p style="font-weight:600">{{ vehiculo.color or '—' }}</p>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <div style="background:var(--err-bg);border:2px solid var(--err-ring);border-radius:16px;padding:2rem;text-align:center">
+    <div style="font-size:3rem">🚫</div>
+    <div style="font-size:1.4rem;font-weight:800;color:var(--err);margin:0.5rem 0">NO REGISTRADO</div>
+    <div style="font-family:monospace;font-size:1.6rem;font-weight:700;color:var(--text);
+                background:var(--surface);border-radius:8px;padding:0.5rem 1.5rem;display:inline-block;
+                border:2px solid var(--err-ring);margin-bottom:1rem;letter-spacing:0.1em">
+      {{ placa }}
+    </div>
+    <p style="color:var(--err);font-size:0.875rem">
+      Este vehículo no pertenece a ningún residente registrado.<br>
+      Solicitar autorización de ingreso por visita.
+    </p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

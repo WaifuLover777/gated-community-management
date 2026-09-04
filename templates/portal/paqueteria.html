@@ -1,0 +1,30 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Paquetería{% endblock %}
+{% block page_title %}Mis paquetes{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header"><h3>📦 Paquetes recibidos en garita</h3></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Descripción</th><th>Remitente</th><th>Recibido</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        {% for p in paquetes %}
+        <tr>
+          <td>{{ p.descripcion }}</td>
+          <td class="text-muted text-sm">{{ p.remitente or '—' }}</td>
+          <td class="text-muted text-sm">{{ p.creado_en|dt }}</td>
+          <td>
+            {% if p.estado == 'entregado' %}<span class="badge badge-green">✅ Entregado</span>
+            {% else %}<span class="badge badge-amber">📦 En garita — pásalo a retirar</span>{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4"><div class="empty"><p>No tienes paquetes</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

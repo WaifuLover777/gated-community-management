@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Historial de Accesos{% endblock %}
+{% block page_title %}Historial de Accesos{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3>Registro de entradas y salidas</h3>
+    <span class="text-muted text-sm">Últimos {{ accesos|length }} eventos</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha / Hora</th><th>Tipo</th><th>Resultado</th>
+          <th>Placa</th><th>Detalle</th><th>Guardia</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in accesos %}
+        <tr>
+          <td class="text-sm text-muted">{{ a.fecha_hora|dt }}</td>
+          <td>
+            {% if a.tipo == 'entrada' %}
+              <span class="badge badge-green">Entrada</span>
+            {% else %}
+              <span class="badge badge-gray">Salida</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if a.resultado == 'autorizado' %}
+              <span class="badge badge-green">Autorizado</span>
+            {% elif a.resultado == 'denegado' %}
+              <span class="badge badge-red">Denegado</span>
+            {% else %}
+              <span class="badge badge-amber">Manual</span>
+            {% endif %}
+          </td>
+          <td>{{ a.placa or '—' }}</td>
+          <td class="text-muted text-sm">{{ a.observacion or '—' }}</td>
+          <td class="text-muted text-sm">{{ a.guardia.nombre if a.guardia else '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty"><p>Aún no hay accesos registrados</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Áreas comunes{% endblock %}
+{% block page_title %}Áreas comunes{% endblock %}
+{% block content %}
+
+<div class="card" style="margin-bottom:1rem;max-width:680px">
+  <div class="card-header"><h3>➕ Nueva área común</h3></div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('reservas.admin_nueva_area') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Nombre *</label>
+          <input type="text" name="nombre" required minlength="2" maxlength="80"
+                 placeholder="Salón comunal, Cancha, BBQ…">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Descripción</label>
+          <input type="text" name="descripcion" maxlength="255">
+        </div>
+        <div class="form-group">
+          <label>Hora apertura</label>
+          <input type="time" name="hora_apertura" value="08:00">
+        </div>
+        <div class="form-group">
+          <label>Hora cierre</label>
+          <input type="time" name="hora_cierre" value="22:00">
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">Crear área</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h3>Áreas registradas</h3></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Nombre</th><th>Descripción</th><th>Horario</th><th>Estado</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for a in areas %}
+        <tr>
+          <td>{{ a.nombre }}</td>
+          <td class="text-muted text-sm">{{ a.descripcion or '—' }}</td>
+          <td>{{ a.hora_apertura }}–{{ a.hora_cierre }}</td>
+          <td>
+            {% if a.activo %}<span class="badge badge-green">Activa</span>
+            {% else %}<span class="badge badge-gray">Inactiva</span>{% endif %}
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('reservas.admin_alternar_area', id=a.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-outline btn-sm">{{ 'Desactivar' if a.activo else 'Activar' }}</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5"><div class="empty"><p>No hay áreas registradas</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

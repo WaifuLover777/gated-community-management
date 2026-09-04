@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Residentes{% endblock %}
+{% block page_title %}Residentes{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <form class="filters" method="GET">
+    <div class="form-group">
+      <label>Buscar</label>
+      <input type="text" name="filtro" value="{{ filtro }}" maxlength="60" placeholder="Nombre, cédula o casa...">
+    </div>
+    <button type="submit" class="btn btn-outline" style="align-self:flex-end">Buscar</button>
+    {% if filtro %}<a href="/residentes/" class="btn btn-outline" style="align-self:flex-end">Limpiar</a>{% endif %}
+  </form>
+  <a href="/residentes/nuevo" class="btn btn-primary">+ Nuevo Residente</a>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th><th>Cédula</th><th>Casa</th><th>Tipo</th>
+          <th>Teléfono</th><th>Email</th><th>Desde</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in residentes %}
+        <tr>
+          <td><strong>{{ r.nombre }}</strong></td>
+          <td class="text-muted">{{ r.cedula }}</td>
+          <td><span class="badge badge-purple">{{ r.manzana }}-{{ r.casa_numero }}</span></td>
+          <td>
+            {% if r.tipo == 'propietario' %}
+              <span class="badge badge-blue">Propietario</span>
+            {% else %}
+              <span class="badge badge-gray">Inquilino</span>
+            {% endif %}
+          </td>
+          <td class="text-muted">{{ r.telefono or '—' }}</td>
+          <td class="text-muted">{{ r.email or '—' }}</td>
+          <td class="text-muted text-sm">{{ r.fecha_ingreso }}</td>
+          <td>
+            <div class="flex gap-2">
+              <a href="/residentes/editar/{{ r.id }}" class="btn btn-outline btn-sm">✏️ Editar</a>
+              <a href="/residentes/eliminar/{{ r.id }}"
+                 onclick="return confirm('¿Dar de baja a {{ r.nombre }}?')"
+                 class="btn btn-danger btn-sm">Dar de baja</a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8">
+            <div class="empty">
+              <p>No se encontraron residentes{% if filtro %} con "{{ filtro }}"{% endif %}</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

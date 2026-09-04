@@ -1,0 +1,119 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Reconocimiento facial{% endblock %}
+{% block page_title %}Mi rostro para acceso{% endblock %}
+{% block content %}
+<div class="card" style="max-width:560px">
+  <div class="card-header"><h3>🙂 Enrolar mi rostro</h3></div>
+  <div class="card-body">
+    {% if enrolado %}
+    <div class="alert alert-success">✅ Ya tienes un rostro enrolado. Puedes actualizarlo subiendo una nueva foto o tomándola con la cámara.</div>
+    {% endif %}
+    <p class="text-sm text-muted">
+      Usa una foto frontal y clara de tu rostro. Se usará únicamente para autorizar tu
+      ingreso por la cámara de la garita.
+    </p>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-group">
+        <label>Foto de rostro (JPG/PNG) *</label>
+        <input type="file" id="foto" name="foto" accept="image/png,image/jpeg" required>
+      </div>
+
+      <div class="form-group">
+        <button type="button" class="btn btn-outline" id="btn-camara">📷 Usar cámara</button>
+        <p id="cam-error" class="text-sm" style="color:#b42318;margin:.4rem 0 0"></p>
+      </div>
+      <div id="zona-camara" style="display:none">
+        <select id="camara" class="btn-outline" style="padding:4px 8px;max-width:100%;margin-bottom:.5rem">
+          <option value="">Cámara por defecto</option>
+        </select>
+        <div style="background:#000;border-radius:10px;overflow:hidden;display:flex;justify-content:center">
+          <video id="video" autoplay playsinline muted style="max-width:100%;max-height:300px"></video>
+        </div>
+        <button type="button" class="btn btn-primary mt-2" id="btn-capturar">📸 Capturar foto</button>
+        <p id="cam-ok" class="text-sm" style="color:#067647;margin:.4rem 0 0"></p>
+      </div>
+
+      <div class="form-group" style="flex-direction:row;align-items:center;gap:8px">
+        <input type="checkbox" name="consentimiento" id="cons" style="width:auto">
+        <label for="cons" style="margin:0">
+          Autorizo el tratamiento de mis datos biométricos para el control de acceso.
+        </label>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">Guardar rostro</button>
+      </div>
+    </form>
+    <p class="text-sm text-muted" style="margin-top:1rem">
+      🔒 Tu información biométrica se almacena cifrada en su representación y se purga
+      automáticamente según la política de retención de la urbanización.
+    </p>
+  </div>
+</div>
+
+<script>
+
+  
+  const video = document.getElementById('video');
+  const camSel = document.getElementById('camara');
+  const errBox = document.getElementById('cam-error');
+  const okBox = document.getElementById('cam-ok');
+  const fileInput = document.getElementById('foto');
+  let stream = null;
+
+  async function iniciar(deviceId) {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    try {
+      const v = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: 'user' };
+      stream = await navigator.mediaDevices.getUserMedia({ video: v });
+      video.srcObject = stream;
+      errBox.textContent = '';
+    } catch (e) {
+      stream = null;
+      errBox.textContent = 'No se pudo acceder a la cámara (' + e.name + '). Sube un archivo.';
+    }
+  }
+
+  async function listarCamaras() {
+    try {
+      const devs = (await navigator.mediaDevices.enumerateDevices())
+                     .filter(d => d.kind === 'videoinput');
+      if (!devs.length) return;
+      camSel.innerHTML = '';
+      devs.forEach((d, i) => {
+        const o = document.createElement('option');
+        o.value = d.deviceId;
+        o.textContent = d.label || ('Cámara ' + (i + 1));
+        camSel.appendChild(o);
+      });
+    } catch (_) {}
+  }
+
+  document.getElementById('btn-camara').addEventListener('click', async () => {
+    document.getElementById('zona-camara').style.display = 'block';
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      errBox.textContent = 'Este navegador no permite usar la cámara. Sube un archivo.';
+      return;
+    }
+    await iniciar();
+    await listarCamaras();
+    if (camSel.value) iniciar(camSel.value);
+  });
+  camSel.addEventListener('change', () => iniciar(camSel.value));
+
+  document.getElementById('btn-capturar').addEventListener('click', () => {
+    if (!stream || !video.videoWidth) { errBox.textContent = 'No hay señal de cámara.'; return; }
+    const c = document.createElement('canvas');
+    c.width = video.videoWidth; c.height = video.videoHeight;
+    c.getContext('2d').drawImage(video, 0, 0);
+    c.toBlob(blob => {
+      
+      const dt = new DataTransfer();
+      dt.items.add(new File([blob], 'rostro.jpg', { type: 'image/jpeg' }));
+      fileInput.files = dt.files;
+      okBox.textContent = '✅ Foto capturada. Pulsa “Guardar rostro”.';
+    }, 'image/jpeg', 0.92);
+  });
+</script>
+{% endblock %}

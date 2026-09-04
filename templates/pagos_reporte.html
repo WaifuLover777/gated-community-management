@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Reporte de Cobranza{% endblock %}
+{% block page_title %}Reporte de Cobranza{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-4" style="flex-wrap:wrap;gap:0.75rem">
+  <form class="filters" method="GET" style="margin:0">
+    <div class="form-group">
+      <label>Año</label>
+      <select name="anio" style="width:110px">
+        <option value="" {{ 'selected' if not anio }}>Todos</option>
+        {% for a in anios %}
+        <option value="{{ a }}" {{ 'selected' if anio == a }}>{{ a }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Mes</label>
+      <select name="mes" style="width:130px">
+        <option value="">Todos</option>
+        {% for i in range(1,13) %}
+        <option value="{{ i }}" {{ 'selected' if mes|string == i|string }}>{{ meses[i] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-outline" style="align-self:flex-end">Filtrar</button>
+  </form>
+  <a href="/pagos/" class="btn btn-outline">← Volver a Pagos</a>
+</div>
+
+<div class="stats-grid" style="margin-bottom:1.25rem">
+  <div class="stat-card teal">
+    <div class="label">Esperado {{ anio if anio else '(todos)' }}</div>
+    <div class="value">${{ "%.2f"|format(reporte.esperado) }}</div>
+  </div>
+  <div class="stat-card green">
+    <div class="label">Recaudado (con mora)</div>
+    <div class="value">${{ "%.2f"|format(reporte.recaudado_total) }}</div>
+  </div>
+  <div class="stat-card purple">
+    <div class="label">% de Recaudación</div>
+    <div class="value">{{ "%.1f"|format(reporte.porcentaje_recaudacion) }}%</div>
+  </div>
+  <div class="stat-card red">
+    <div class="label">Vencido (sin cobrar)</div>
+    <div class="value">${{ "%.2f"|format(reporte.vencido) }}</div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem">
+      <div>
+        <p class="text-muted text-sm">Cobrado (base)</p>
+        <p><strong>${{ "%.2f"|format(reporte.cobrado) }}</strong></p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">Mora cobrada</p>
+        <p><strong>${{ "%.2f"|format(reporte.recargo_cobrado) }}</strong></p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">Pendiente</p>
+        <p><strong>${{ "%.2f"|format(reporte.pendiente) }}</strong></p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">En revisión</p>
+        <p><strong>${{ "%.2f"|format(reporte.en_revision) }}</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>⚠️ Residentes morosos ({{ reporte.morosos|length }})</h3>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Casa</th><th>Cuotas vencidas</th><th>Mayor atraso</th><th>Total adeudado (con mora)</th></tr>
+      </thead>
+      <tbody>
+        {% for m in reporte.morosos %}
+        <tr>
+          <td><span class="badge badge-purple">{{ m.casa }}</span></td>
+          <td>{{ m.cuotas_vencidas }}</td>
+          <td>{{ m.max_atraso }} mes(es)</td>
+          <td><strong style="color:var(--err)">${{ "%.2f"|format(m.total_adeudado) }}</strong></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4"><div class="empty"><p>🎉 No hay morosos en este período.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

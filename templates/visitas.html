@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Control de Visitas{% endblock %}
+{% block page_title %}Control de Visitas y Accesos{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4" style="flex-wrap:wrap;gap:0.75rem">
+  <form class="filters" method="GET" style="margin:0">
+    <div class="form-group">
+      <label>Fecha</label>
+      <input type="date" name="fecha" value="{{ filtro_fecha }}">
+    </div>
+    <div class="form-group">
+      <label>Casa</label>
+      <input type="text" name="casa" value="{{ filtro_casa }}" maxlength="20" placeholder="Ej: A-01" style="width:100px">
+    </div>
+    <button type="submit" class="btn btn-outline" style="align-self:flex-end">Filtrar</button>
+    {% if filtro_fecha or filtro_casa %}
+    <a href="/visitas/" class="btn btn-outline" style="align-self:flex-end">Limpiar</a>
+    {% endif %}
+  </form>
+  <a href="/visitas/nueva" class="btn btn-primary">+ Registrar Visita</a>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Visitante</th><th>Cédula</th><th>Casa</th><th>Motivo</th><th>Placa</th><th>Estado</th><th>Entrada</th><th>Salida</th><th>Acción</th></tr>
+      </thead>
+      <tbody>
+        {% for v in visitas %}
+        <tr>
+          <td><strong>{{ v.nombre_visitante }}</strong></td>
+          <td class="text-muted">{{ v.cedula_visitante or '—' }}</td>
+          <td><span class="badge badge-purple">{{ v.manzana }}-{{ v.casa_numero }}</span></td>
+          <td class="text-muted">{{ v.motivo or '—' }}</td>
+          <td>{{ v.placa_vehiculo or '—' }}</td>
+          <td>
+            {% if v.estado == 'pendiente' %}
+              <span class="badge badge-amber">⏳ Solicitud pendiente</span>
+            {% elif v.fecha_salida %}
+              <span class="badge badge-gray">Salió</span>
+            {% elif v.estado == 'usado' %}
+              <span class="badge badge-green">Dentro</span>
+            {% else %}
+              <span class="badge badge-gray">{{ v.estado }}</span>
+            {% endif %}
+          </td>
+          <td class="text-sm text-muted">{{ v.fecha_entrada|dt if v.fecha_entrada else '—' }}</td>
+          <td class="text-sm text-muted">{{ v.fecha_salida|dt if v.fecha_salida else '—' }}</td>
+          <td>
+            {% if v.estado == 'usado' and not v.fecha_salida %}
+            <a href="/visitas/salida/{{ v.id }}" class="btn btn-success btn-sm">🚪 Salida</a>
+            {% elif v.fecha_salida %}
+            <span class="badge badge-gray">Salió</span>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9"><div class="empty"><p>No hay visitas registradas</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "_auto_refresh.html" %}
+{% endblock %}

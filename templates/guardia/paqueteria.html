@@ -1,0 +1,96 @@
+{% extends "guardia/base_guardia.html" %}
+{% block title %}Paquetería{% endblock %}
+{% block page_title %}Paquetería y correspondencia{% endblock %}
+{% block content %}
+
+<div class="card" style="margin-bottom:1rem;max-width:680px">
+  <div class="card-header"><h3>📦 Registrar paquete</h3></div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('paqueteria.registrar') }}"
+          enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group">
+          <label>Casa destinataria *</label>
+          <select name="casa_id" required>
+            <option value="">— Seleccionar —</option>
+            {% for c in casas %}
+            <option value="{{ c.id }}">{{ c.manzana }}-{{ c.numero }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Remitente / paquetería</label>
+          <input type="text" name="remitente" maxlength="120" placeholder="Servientrega, Amazon…">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Descripción *</label>
+          <input type="text" name="descripcion" required minlength="2" maxlength="200"
+                 placeholder="Caja mediana, sobre, etc.">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Foto (opcional, JPG/PNG)</label>
+          <input type="file" name="foto" accept="image/png,image/jpeg">
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">Registrar y notificar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:1rem">
+  <div class="card-body">
+    <form method="GET" class="filters">
+      <div class="form-group">
+        <label>Filtrar por estado</label>
+        <select name="estado" onchange="this.form.submit()">
+          <option value="">Todos</option>
+          <option value="recibido" {% if estado=='recibido' %}selected{% endif %}>Recibido (en garita)</option>
+          <option value="entregado" {% if estado=='entregado' %}selected{% endif %}>Entregado</option>
+        </select>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h3>Paquetes</h3></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Casa</th><th>Descripción</th><th>Remitente</th><th>Recibido</th><th>Estado</th><th>Acción</th></tr>
+      </thead>
+      <tbody>
+        {% for p in paquetes %}
+        <tr>
+          <td>{{ p.manzana }}-{{ p.casa_numero }}</td>
+          <td>{{ p.descripcion }}</td>
+          <td class="text-muted text-sm">{{ p.remitente or '—' }}</td>
+          <td class="text-muted text-sm">{{ p.creado_en|dt }}</td>
+          <td>
+            {% if p.estado == 'entregado' %}<span class="badge badge-green">Entregado</span>
+            {% else %}<span class="badge badge-amber">En garita</span>{% endif %}
+          </td>
+          <td>
+            {% if p.estado == 'recibido' %}
+            <form method="POST" action="{{ url_for('paqueteria.entregar', id=p.id) }}"
+                  class="flex gap-2">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="text" name="retirado_por" placeholder="Retirado por…" maxlength="120">
+              <button class="btn btn-success btn-sm">Entregar</button>
+            </form>
+            {% else %}
+            <span class="text-sm text-muted">{{ p.retirado_por or '—' }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty"><p>No hay paquetes registrados</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card purple">
+    <div class="label">Total Casas</div>
+    <div class="value">{{ stats.total_casas }}</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="label">Residentes Activos</div>
+    <div class="value">{{ stats.total_residentes }}</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="label">Cuotas Pendientes</div>
+    <div class="value">{{ stats.cuotas_pendientes }}</div>
+  </div>
+  <div class="stat-card red">
+    <div class="label">Cuotas Vencidas</div>
+    <div class="value">{{ stats.cuotas_vencidas }}</div>
+  </div>
+  <div class="stat-card green">
+    <div class="label">Visitas Hoy</div>
+    <div class="value">{{ stats.visitas_hoy }}</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="label">Comunicados Activos</div>
+    <div class="value">{{ stats.comunicados_activos }}</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  
+  <div class="card">
+    <div class="card-header">
+      <h3>🔐 Visitas Recientes</h3>
+      <a href="/visitas/nueva" class="btn btn-primary btn-sm">+ Nueva visita</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Visitante</th><th>Casa</th><th>Entrada</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+          {% for v in visitas %}
+          <tr>
+            <td>{{ v.nombre_visitante }}</td>
+            <td><span class="badge badge-purple">{{ v.casa_numero }}</span></td>
+            <td class="text-muted text-sm">{{ v.fecha_entrada|dt }}</td>
+            <td>
+              {% if v.fecha_salida %}
+                <span class="badge badge-gray">Salió</span>
+              {% else %}
+                <span class="badge badge-green">Dentro</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-muted" style="text-align:center;padding:1rem">Sin visitas hoy</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>📢 Comunicados Recientes</h3>
+      <a href="/comunicados/nuevo" class="btn btn-primary btn-sm">+ Nuevo</a>
+    </div>
+    <div class="card-body">
+      {% for c in comunicados %}
+      <div style="padding:0.75rem 0; border-bottom:1px solid var(--border); {% if loop.last %}border:none{% endif %}">
+        <div class="flex items-center justify-between mb-4">
+          <strong style="font-size:0.875rem">{{ c.titulo }}</strong>
+          {% if c.tipo == 'urgente' %}
+            <span class="badge badge-red">Urgente</span>
+          {% elif c.tipo == 'evento' %}
+            <span class="badge badge-blue">Evento</span>
+          {% elif c.tipo == 'circular' %}
+            <span class="badge badge-purple">Circular</span>
+          {% else %}
+            <span class="badge badge-gray">Anuncio</span>
+          {% endif %}
+        </div>
+        <p class="text-sm text-muted">{{ c.contenido[:100] }}{% if c.contenido|length > 100 %}...{% endif %}</p>
+        <p class="text-sm text-muted mt-4">{{ c.publicado_en|dt('%Y-%m-%d') }}</p>
+      </div>
+      {% else %}
+      <div class="empty"><p>No hay comunicados activos</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card mt-4">
+  <div class="card-header"><h3>⚡ Accesos Rápidos</h3></div>
+  <div class="card-body" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <a href="/residentes/nuevo" class="btn btn-outline">👤 Nuevo Residente</a>
+    <a href="/residentes/casas/nueva" class="btn btn-outline">🏠 Nueva Casa</a>
+    <a href="/pagos/generar" class="btn btn-outline">💰 Generar Cuotas</a>
+    <a href="/pagos/reporte" class="btn btn-outline">📊 Reporte de Cobranza</a>
+    <a href="/visitas/nueva" class="btn btn-outline">🔐 Registrar Visita</a>
+    <a href="/comunicados/nuevo" class="btn btn-outline">📢 Nuevo Comunicado</a>
+  </div>
+</div>
+{% endblock %}

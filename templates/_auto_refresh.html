@@ -1,0 +1,11 @@
+
+<script>
+  (function () {
+    var ms = {{ refresh_ms|default(10000) }};
+    setInterval(function () {
+      if (document.visibilityState === 'visible') {
+        location.reload();
+      }
+    }, ms);
+  })();
+</script>

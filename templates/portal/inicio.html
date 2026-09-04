@@ -1,0 +1,155 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Mi Panel{% endblock %}
+{% block page_title %}Bienvenido, {{ residente.nombre }}{% endblock %}
+{% block content %}
+
+<div class="stats-grid">
+  <div class="stat-card teal">
+    <div class="label">Mi Casa</div>
+    <div class="value" style="font-size:1.3rem">{{ residente.manzana }}-{{ residente.casa_numero }}</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="label">Cuotas Pendientes</div>
+    <div class="value">{{ cuotas_pendientes }}</div>
+  </div>
+  <div class="stat-card red">
+    <div class="label">Cuotas Vencidas</div>
+    <div class="value">{{ cuotas_vencidas }}</div>
+  </div>
+  <div class="stat-card purple">
+    <div class="label">Deuda Total {% if deuda and deuda.recargo > 0 %}<small>(con mora)</small>{% endif %}</div>
+    <div class="value">${{ "%.2f"|format(deuda.total if deuda else 0) }}</div>
+  </div>
+</div>
+
+{% if deuda and deuda.total > 0 %}
+<div class="card mb-4" style="border-left:4px solid var(--err)">
+  <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem">
+    <p style="margin:0">
+      Tienes <strong>${{ "%.2f"|format(deuda.total) }}</strong> en cuotas por pagar
+      {% if deuda.recargo > 0 %}(incluye ${{ "%.2f"|format(deuda.recargo) }} de mora){% endif %}.
+    </p>
+    <a href="/portal/cuotas" class="btn btn-primary btn-sm">Pagar ahora</a>
+  </div>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+  <div class="card-header"><h3>🏠 Mi Vivienda</h3></div>
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem">
+      <div>
+        <p class="text-muted text-sm">Identificación</p>
+        <p><strong>{{ residente.manzana }}-{{ residente.casa_numero }}</strong></p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">Tipo de vivienda</p>
+        <p>{{ residente.casa.tipo|capitalize if residente.casa and residente.casa.tipo else '—' }}</p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">Color</p>
+        <p>{{ residente.casa.color if residente.casa and residente.casa.color else '—' }}</p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">Área</p>
+        <p>{{ '%.0f m²'|format(residente.casa.area_m2) if residente.casa and residente.casa.area_m2 else '—' }}</p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">Capacidad máxima</p>
+        <p>{{ residente.casa.capacidad if residente.casa and residente.casa.capacidad else '—' }} personas</p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">Personas viviendo</p>
+        <p>{{ residente.casa.personas if residente.casa and residente.casa.personas is not none else '—' }}</p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">Estado</p>
+        <p>{{ residente.casa.estado|capitalize if residente.casa and residente.casa.estado else '—' }}</p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">Alícuota mensual</p>
+        <p>${{ '%.2f'|format(residente.casa.alicuota) if residente.casa and residente.casa.alicuota else '0.00' }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header"><h3>🪪 Mi credencial QR de acceso</h3></div>
+  <div class="card-body" style="display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap">
+    <img src="{{ url_for('portal.qr_residente') }}" alt="QR de residente"
+         style="width:150px;height:150px;border:1px solid var(--border);border-radius:8px;background:#fff;padding:6px">
+    <div>
+      <p class="text-muted text-sm" style="margin:0">Muéstralo en la garita para tu ingreso.</p>
+      <p class="text-sm" style="margin-top:0.4rem">Es personal e intransferible. No lo compartas.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header"><h3>📋 Mi Información</h3></div>
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.25rem">
+      <div>
+        <p class="text-muted text-sm">Nombre</p>
+        <p><strong>{{ residente.nombre }}</strong></p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">Cédula</p>
+        <p>{{ residente.cedula }}</p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">Tipo</p>
+        <p>
+          {% if residente.tipo == 'propietario' %}
+            <span class="badge badge-teal">Propietario</span>
+          {% else %}
+            <span class="badge badge-gray">Inquilino</span>
+          {% endif %}
+        </p>
+      </div>
+      <div>
+        <p class="text-muted text-sm">Teléfono</p>
+        <p>{{ residente.telefono or '—' }}</p>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:1rem">
+      <p class="text-muted text-sm" style="margin-bottom:0.5rem">Personas viviendo en la casa actualmente</p>
+      <form method="POST" action="/portal/mi-casa/personas"
+            style="display:flex;align-items:center;gap:0.75rem">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="number" name="personas" min="0" max="50"
+               value="{{ residente.casa.personas if residente.casa and residente.casa.personas is not none else '' }}"
+               placeholder="Ej: 3"
+               style="width:100px;padding:0.4rem 0.6rem;border:1px solid var(--border);border-radius:6px;font-size:0.9rem;background:var(--surface);color:var(--text)">
+        <button type="submit" class="btn btn-outline btn-sm">Actualizar</button>
+        {% if residente.casa and residente.casa.personas is not none %}
+          <span class="text-muted text-sm">Actual: <strong>{{ residente.casa.personas }}</strong></span>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>📢 Últimos Comunicados</h3>
+    <a href="/portal/comunicados" class="btn btn-outline btn-sm">Ver todos</a>
+  </div>
+  <div class="card-body">
+    {% for c in comunicados %}
+    <div style="padding:0.75rem 0;border-bottom:1px solid var(--border);{% if loop.last %}border:none{% endif %}">
+      <div class="flex items-center gap-2 mb-4">
+        {% if c.tipo == 'urgente' %}<span class="badge badge-red">🚨 Urgente</span>
+        {% elif c.tipo == 'evento' %}<span class="badge badge-teal">📅 Evento</span>
+        {% else %}<span class="badge badge-gray">📢 Anuncio</span>{% endif %}
+        <strong style="font-size:0.875rem">{{ c.titulo }}</strong>
+      </div>
+      <p class="text-sm text-muted">{{ c.contenido[:120] }}{% if c.contenido|length > 120 %}...{% endif %}</p>
+    </div>
+    {% else %}
+    <div class="empty"><p>No hay comunicados activos</p></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

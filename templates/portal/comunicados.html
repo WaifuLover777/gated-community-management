@@ -1,0 +1,26 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Comunicados{% endblock %}
+{% block page_title %}Comunicados de la Urbanización{% endblock %}
+{% block content %}
+<div style="display:flex;flex-direction:column;gap:1rem">
+  {% for c in comunicados %}
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        {% if c.tipo == 'urgente' %}<span class="badge badge-red">🚨 Urgente</span>
+        {% elif c.tipo == 'evento' %}<span class="badge badge-teal">📅 Evento</span>
+        {% elif c.tipo == 'circular' %}<span class="badge badge-amber">📄 Circular</span>
+        {% else %}<span class="badge badge-gray">📢 Anuncio</span>{% endif %}
+        <h3>{{ c.titulo }}</h3>
+      </div>
+      <span class="text-sm text-muted">{{ c.publicado_en|dt('%Y-%m-%d') }}</span>
+    </div>
+    <div class="card-body">
+      <p style="line-height:1.6;white-space:pre-wrap">{{ c.contenido }}</p>
+    </div>
+  </div>
+  {% else %}
+  <div class="card"><div class="empty"><p>No hay comunicados activos</p></div></div>
+  {% endfor %}
+</div>
+{% endblock %}

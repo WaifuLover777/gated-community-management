@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PIN de registro — Urbanización</title>
+  <script>
+    (function(){
+      var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+      document.documentElement.setAttribute('data-theme',t);
+    })();
+  </script>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <style>
+    :root { --accent: #6366f1; --accent-dark: #4f46e5; }
+    body { background: var(--bg);
+           min-height: 100vh; display: flex; align-items: center; justify-content: center;
+           padding: 1.5rem 0; }
+    .card { background: var(--surface); border-radius: 16px; padding: 2.5rem;
+            width: 100%; max-width: 420px; border: 1px solid var(--border);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            transition: background var(--t), border-color var(--t); }
+    .logo { text-align: center; margin-bottom: 1.8rem; }
+    .logo .icon { font-size: 2.5rem; }
+    .logo h1 { font-size: 1.3rem; font-weight: 700; color: var(--text); margin-top: 0.4rem; }
+    .logo p { color: var(--text-muted); font-size: 0.85rem; margin-top: 3px; }
+    .form-group { margin-bottom: 0.75rem; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 500;
+                        color: var(--text-muted); margin-bottom: 4px; }
+    .form-group input { width: 100%; padding: 0.7rem 0.875rem; border: 1px solid var(--border);
+                        border-radius: 8px; font-size: 1.4rem; letter-spacing: 0.4em;
+                        text-align: center; font-family: monospace;
+                        background: var(--surface); color: var(--text);
+                        transition: border 0.15s, background var(--t); }
+    .form-group input:focus { outline: none; border-color: var(--accent);
+                              box-shadow: 0 0 0 3px var(--accent-ring); }
+    .btn-register { width: 100%; padding: 0.75rem; background: var(--accent); color: #fff;
+                    border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600;
+                    cursor: pointer; margin-top: 1rem; transition: background 0.15s; }
+    .btn-register:hover { background: var(--accent-dark); }
+    .btn-back { display: block; text-align: center; margin-top: 1rem;
+                color: var(--text-muted); font-size: 0.85rem; text-decoration: none; }
+    .btn-back:hover { color: var(--accent); }
+    .alert-error { padding: 0.6rem 0.875rem; background: var(--err-bg); color: var(--err);
+                   border-radius: 6px; font-size: 0.825rem; margin-bottom: 1rem; }
+    .alert-success { padding: 0.6rem 0.875rem; background: var(--ok-bg); color: var(--ok);
+                     border-radius: 6px; font-size: 0.825rem; margin-bottom: 1rem; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+    .nota { font-size: 0.775rem; color: var(--text-muted); text-align: center;
+            background: var(--surface-2); padding: 0.6rem; border-radius: 6px; margin-top: 0.5rem; }
+    .theme-row { display: flex; justify-content: center; margin-top: 1rem; }
+    @media (max-width: 440px) { .card { padding: 1.5rem; } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="icon">🔑</div>
+      <h1>PIN de registro</h1>
+      <p>Ingresa el PIN que te entregó el administrador</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert-{{ 'error' if category == 'error' else 'success' }}">
+          {{ '⚠️' if category == 'error' else '✅' }} {{ message }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="paso" value="1">
+
+      <div class="form-group">
+        <label>PIN de la villa *</label>
+        <input type="text" name="pin" placeholder="••••••" required autofocus
+               inputmode="numeric" pattern="\d{6}" maxlength="6"
+               title="6 dígitos numéricos"
+               oninput="this.value=this.value.replace(/\D/g,'')">
+      </div>
+
+      <button type="submit" class="btn-register">Continuar →</button>
+    </form>
+
+    <hr class="divider">
+    <p class="nota">ℹ️ El registro solo es posible con un PIN de un solo uso que
+       genera el administrador para tu villa. Si no lo tienes, contáctalo.</p>
+    <a href="/login" class="btn-back">← Volver al inicio de sesión</a>
+
+    <div class="theme-row">
+      <button class="btn-theme" onclick="toggleTheme()" title="Cambiar tema"
+              style="gap:6px;width:auto;padding:6px 12px;font-size:0.775rem;color:var(--text-muted)">
+        <span class="icon-moon">🌙</span>
+        <span class="icon-sun">☀️</span>
+        <span id="theme-label" style="margin-left:2px"></span>
+      </button>
+    </div>
+  </div>
+
+<script>
+  function toggleTheme() {
+    var html = document.documentElement;
+    var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    document.getElementById('theme-label').textContent = next === 'dark' ? 'Modo oscuro' : 'Modo claro';
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    var t = document.documentElement.getAttribute('data-theme');
+    document.getElementById('theme-label').textContent = t === 'dark' ? 'Modo oscuro' : 'Modo claro';
+  });
+</script>
+</body>
+</html>

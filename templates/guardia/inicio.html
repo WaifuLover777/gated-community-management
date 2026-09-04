@@ -1,0 +1,53 @@
+{% extends "guardia/base_guardia.html" %}
+{% block title %}Panel Guardia{% endblock %}
+{% block page_title %}Control de Acceso — Hoy{% endblock %}
+{% block content %}
+
+<div class="stats-grid">
+  <div class="stat-card green">
+    <div class="label">Visitas Hoy</div>
+    <div class="value">{{ visitas|length }}</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="label">Dentro Ahora</div>
+    <div class="value">{{ dentro }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>🔐 Accesos de Hoy</h3>
+  </div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr><th>Visitante</th><th>Casa</th><th>Motivo</th><th>Placa</th><th>Entrada</th><th>Salida</th><th>Acción</th></tr>
+      </thead>
+      <tbody>
+        {% for v in visitas %}
+        <tr>
+          <td><strong>{{ v.nombre_visitante }}</strong></td>
+          <td><span class="badge badge-purple">{{ v.manzana }}-{{ v.casa_numero }}</span></td>
+          <td class="text-muted">{{ v.motivo or '—' }}</td>
+          <td>{{ v.placa_vehiculo or '—' }}</td>
+          <td class="text-sm text-muted">{{ v.fecha_entrada|dt('%H:%M') }}</td>
+          <td class="text-sm text-muted">{{ v.fecha_salida|dt('%H:%M') if v.fecha_salida else '—' }}</td>
+          <td>
+            {% if not v.fecha_salida %}
+            <a href="/guardia/visitas/salida/{{ v.id }}" class="btn btn-success btn-sm">🚪 Salida</a>
+            {% else %}
+            <span class="badge badge-gray">Salió</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7"><div class="empty"><p>No hay visitas registradas hoy</p></div></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "_auto_refresh.html" %}
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Nuevo Usuario{% endblock %}
+{% block page_title %}Crear Nuevo Usuario{% endblock %}
+{% block content %}
+<div class="card" style="max-width:580px">
+  <div class="card-header">
+    <h3>👤 Crear Acceso de Usuario</h3>
+    <a href="/usuarios" class="btn btn-outline btn-sm">← Volver</a>
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre completo *</label>
+          <input type="text" name="nombre" required minlength="3" maxlength="80"
+                 pattern="[A-Za-zÁÉÍÓÚáéíóúÑñÜü ]+" title="Solo letras y espacios">
+        </div>
+        <div class="form-group">
+          <label>Correo electrónico *</label>
+          <input type="email" name="email" required placeholder="ejemplo@correo.com" maxlength="50">
+        </div>
+        <div class="form-group">
+          <label>Contraseña *</label>
+          <input type="text" name="password" required minlength="6" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="form-group">
+          <label>Rol *</label>
+          <select name="rol" required id="selectRol" onchange="toggleResidente()">
+            <option value="">— Seleccionar rol —</option>
+            <option value="admin">🛡️ Administrador</option>
+            <option value="guardia">💂 Guardia</option>
+            <option value="residente">👤 Residente</option>
+          </select>
+        </div>
+        <div class="form-group" id="campoResidente" style="display:none;grid-column:1/-1">
+          <label>Residente asociado *</label>
+          <select name="residente_id">
+            <option value="">— Seleccionar residente —</option>
+            {% for r in residentes %}
+            <option value="{{ r.id }}">{{ r.nombre }} (Casa {{ r.numero }})</option>
+            {% endfor %}
+          </select>
+          <small style="color:var(--text-muted);font-size:0.75rem">
+            Solo para rol Residente. Selecciona a cuál residente corresponde este usuario.
+          </small>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">✅ Crear Usuario</button>
+        <a href="/usuarios" class="btn btn-outline">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleResidente() {
+  const rol = document.getElementById("selectRol").value;
+  const campo = document.getElementById("campoResidente");
+  campo.style.display = rol === "residente" ? "block" : "none";
+}
+</script>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Nueva Visita{% endblock %}
+{% block page_title %}Registrar Visita{% endblock %}
+{% block content %}
+<div class="card" style="max-width:600px">
+  <div class="card-header">
+    <h3>🔐 Registro de Visita</h3>
+    <a href="/visitas/" class="btn btn-outline btn-sm">← Volver</a>
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Casa a visitar *</label>
+          <select name="casa_id" required>
+            <option value="">— Seleccionar casa —</option>
+            {% for c in casas %}
+            <option value="{{ c.id }}">{{ c.manzana }}-{{ c.numero }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Nombre del visitante *</label>
+          <input type="text" name="nombre_visitante" required autofocus
+                 minlength="3" maxlength="80" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñÜü ]+"
+                 title="Solo letras y espacios">
+        </div>
+        <div class="form-group">
+          <label>Cédula del visitante</label>
+          <input type="text" name="cedula_visitante" inputmode="numeric"
+                 pattern="\d{10}" maxlength="10" title="10 dígitos numéricos">
+        </div>
+        <div class="form-group">
+          <label>Motivo de visita</label>
+          <input type="text" name="motivo" maxlength="70" placeholder="Ej: Familiar, Proveedor, Delivery...">
+        </div>
+        <div class="form-group">
+          <label>Placa del vehículo</label>
+          <input type="text" name="placa_vehiculo" placeholder="Ej: ABC-1234"
+                 pattern="[A-Za-z]{3}-?[0-9]{3,4}" maxlength="8" title="Formato ABC-1234"
+                 style="text-transform:uppercase">
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">✅ Registrar Entrada</button>
+        <a href="/visitas/" class="btn btn-outline">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

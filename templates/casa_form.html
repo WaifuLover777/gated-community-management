@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if casa else 'Nueva' }} Casa{% endblock %}
+{% block page_title %}{{ 'Editar' if casa else 'Nueva' }} Casa{% endblock %}
+{% block content %}
+<div class="card" style="max-width:600px">
+  <div class="card-header">
+    <h3>🏠 {{ 'Editar Casa' if casa else 'Registrar Nueva Casa' }}</h3>
+    <a href="/residentes/casas" class="btn btn-outline btn-sm">← Volver</a>
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Número de casa *</label>
+          <input type="text" name="numero" value="{{ casa.numero if casa else '' }}" required placeholder="Ej: A-01">
+        </div>
+        <div class="form-group">
+          <label>Manzana</label>
+          <input type="text" name="manzana" value="{{ casa.manzana if casa else '' }}" maxlength="20" placeholder="Ej: A">
+        </div>
+        <div class="form-group">
+          <label>Tipo de vivienda</label>
+          <select name="tipo">
+            {% set t = casa.tipo if casa else '' %}
+            <option value="" {{ 'selected' if not t }}>—</option>
+            <option value="casa" {{ 'selected' if t == 'casa' }}>Casa</option>
+            <option value="villa" {{ 'selected' if t == 'villa' }}>Villa</option>
+            <option value="adosada" {{ 'selected' if t == 'adosada' }}>Adosada</option>
+            <option value="departamento" {{ 'selected' if t == 'departamento' }}>Departamento</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Color de fachada</label>
+          <input type="text" name="color" value="{{ casa.color if casa else '' }}" maxlength="30" placeholder="Ej: Blanco">
+        </div>
+        <div class="form-group">
+          <label>Área (m²)</label>
+          <input type="number" step="0.01" min="0" name="area_m2" value="{{ casa.area_m2 if casa else '' }}">
+        </div>
+        <div class="form-group">
+          <label>Alícuota mensual ($)</label>
+          <input type="number" step="0.01" name="alicuota" value="{{ casa.alicuota if casa else '' }}">
+        </div>
+        <div class="form-group">
+          <label>Personas actuales en la casa</label>
+          <input type="number" min="0" max="50" name="personas"
+                 value="{{ casa.personas if casa and casa.personas else '' }}"
+                 placeholder="Ej: 3">
+        </div>
+        <div class="form-group">
+          <label>Capacidad máxima (personas)</label>
+          <input type="number" min="1" max="20" name="capacidad"
+                 value="{{ casa.capacidad if casa and casa.capacidad else '' }}"
+                 placeholder="Ej: 4">
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select name="estado">
+            <option value="ocupada" {{ 'selected' if casa and casa.estado == 'ocupada' }}>Ocupada</option>
+            <option value="desocupada" {{ 'selected' if casa and casa.estado == 'desocupada' }}>Desocupada</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">{{ '💾 Actualizar' if casa else '✅ Registrar' }}</button>
+        <a href="/residentes/casas" class="btn btn-outline">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

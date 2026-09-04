@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Multas{% endblock %}
+{% block page_title %}Multas y sanciones{% endblock %}
+{% block content %}
+
+<div class="card" style="margin-bottom:1rem;max-width:760px">
+  <div class="card-header"><h3>➕ Registrar multa</h3></div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('multas.nueva') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group">
+          <label>Casa *</label>
+          <select name="casa_id" required>
+            <option value="">— Seleccionar —</option>
+            {% for c in casas %}
+            <option value="{{ c.id }}">{{ c.manzana }}-{{ c.numero }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Monto (USD) *</label>
+          <input type="number" name="monto" step="0.01" min="0.01" required placeholder="0.00">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Motivo *</label>
+          <input type="text" name="motivo" required minlength="3" maxlength="120"
+                 placeholder="Ruido excesivo, parqueo indebido, mora…">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Descripción</label>
+          <textarea name="descripcion" rows="2" maxlength="1000"></textarea>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">Registrar multa</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:1rem">
+  <div class="card-body">
+    <form method="GET" class="filters">
+      <div class="form-group">
+        <label>Filtrar por estado</label>
+        <select name="estado" onchange="this.form.submit()">
+          <option value="">Todas</option>
+          {% for e in ['pendiente','pagada','anulada'] %}
+          <option value="{{ e }}" {% if e == estado %}selected{% endif %}>{{ e|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h3>Multas registradas</h3></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Casa</th><th>Motivo</th><th>Fecha</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr>
+      </thead>
+      <tbody>
+        {% for m in multas %}
+        <tr>
+          <td>{{ m.manzana }}-{{ m.casa_numero }}</td>
+          <td>{{ m.motivo }}{% if m.descripcion %}<div class="text-sm text-muted">{{ m.descripcion }}</div>{% endif %}</td>
+          <td>{{ m.fecha }}</td>
+          <td><strong>${{ "%.2f"|format(m.monto) }}</strong></td>
+          <td>
+            {% if m.estado == 'pagada' %}<span class="badge badge-green">Pagada</span>
+            {% elif m.estado == 'anulada' %}<span class="badge badge-gray">Anulada</span>
+            {% else %}<span class="badge badge-red">Pendiente</span>{% endif %}
+          </td>
+          <td>
+            <div class="flex gap-2">
+              {% if m.estado != 'pagada' %}
+              <form method="POST" action="{{ url_for('multas.estado', id=m.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="estado" value="pagada">
+                <button class="btn btn-success btn-sm">Marcar pagada</button>
+              </form>
+              {% endif %}
+              {% if m.estado != 'anulada' %}
+              <form method="POST" action="{{ url_for('multas.estado', id=m.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="estado" value="anulada">
+                <button class="btn btn-outline btn-sm">Anular</button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty"><p>No hay multas registradas</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

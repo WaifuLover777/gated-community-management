@@ -1,0 +1,29 @@
+# Entorno virtual
+venv/
+.venv/
+
+# Cachés de Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Configuración sensible (no versionar)
+.env
+
+# Base de datos local y archivos generados en tiempo de ejecución
+*.db
+data/
+static/comprobantes/
+
+# Configuración de herramientas y editores
+.vscode/
+.idea/
+
+# Sistema operativo
+Thumbs.db
+.DS_Store
+
+# Artefactos de ejecución (subidas, logs, cachés de test)
+static/evidencia/
+*.log
+.pytest_cache/

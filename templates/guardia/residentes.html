@@ -1,0 +1,48 @@
+{% extends "guardia/base_guardia.html" %}
+{% block title %}Residentes{% endblock %}
+{% block page_title %}Residentes por Casa{% endblock %}
+{% block content %}
+<form class="filters" method="GET">
+  <div class="form-group">
+    <label>Buscar por nombre o casa</label>
+    <input type="text" name="filtro" value="{{ filtro }}" maxlength="60" placeholder="Ej: A-01 o Juan...">
+  </div>
+  <button type="submit" class="btn btn-outline" style="align-self:flex-end">Buscar</button>
+  {% if filtro %}<a href="/guardia/residentes" class="btn btn-outline" style="align-self:flex-end">Limpiar</a>{% endif %}
+</form>
+
+<div class="card">
+  <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr><th>Casa</th><th>Nombre</th><th>Tipo</th><th>Teléfono</th><th>Vehículos / Placas</th></tr>
+      </thead>
+      <tbody>
+        {% for r in residentes %}
+        <tr>
+          <td><span class="badge badge-purple">{{ r.manzana }}-{{ r.casa_numero }}</span></td>
+          <td><strong>{{ r.nombre }}</strong></td>
+          <td>
+            {% if r.tipo == 'propietario' %}
+              <span class="badge badge-amber">Propietario</span>
+            {% else %}
+              <span class="badge badge-gray">Inquilino</span>
+            {% endif %}
+          </td>
+          <td class="text-muted">{{ r.telefono or '—' }}</td>
+          <td>
+            {% if r.vehiculos %}
+              {% for v in r.vehiculos %}
+              <span class="badge badge-gray" style="font-family:monospace" title="{{ v.marca }} {{ v.modelo }} {{ v.color }}">🚗 {{ v.placa }}</span>
+              {% endfor %}
+            {% else %}<span class="text-muted">—</span>{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5"><div class="empty"><p>No se encontraron residentes</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

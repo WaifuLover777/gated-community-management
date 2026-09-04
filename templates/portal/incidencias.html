@@ -1,0 +1,75 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Incidencias{% endblock %}
+{% block page_title %}Reportar incidencias y mantenimiento{% endblock %}
+{% block content %}
+
+<div class="card" style="margin-bottom:1rem;max-width:680px">
+  <div class="card-header"><h3>🛠️ Reportar un problema</h3></div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('incidencias.nueva_incidencia') }}"
+          enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group">
+          <label>Título *</label>
+          <input type="text" name="titulo" required minlength="3" maxlength="120"
+                 placeholder="Ej.: Fuga de agua en la acera">
+        </div>
+        <div class="form-group">
+          <label>Categoría</label>
+          <select name="categoria">
+            {% for c in categorias %}
+            <option value="{{ c }}">{{ c|replace('_',' ')|capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Descripción *</label>
+          <textarea name="descripcion" rows="3" required minlength="5"
+                    placeholder="Describe el problema con el mayor detalle posible…"></textarea>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>Foto (opcional, JPG/PNG)</label>
+          <input type="file" name="foto" accept="image/png,image/jpeg">
+        </div>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">Enviar reporte</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:1rem">
+  {% for i in incidencias %}
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        {% if i.estado == 'resuelto' %}<span class="badge badge-teal">✅ Resuelto</span>
+        {% elif i.estado == 'en_proceso' %}<span class="badge badge-amber">🔧 En proceso</span>
+        {% else %}<span class="badge badge-gray">🆕 Abierto</span>{% endif %}
+        <h3>{{ i.titulo }}</h3>
+      </div>
+      <span class="text-sm text-muted">{{ i.fecha_creacion|dt('%Y-%m-%d') }}</span>
+    </div>
+    <div class="card-body">
+      <p class="text-sm text-muted">{{ i.categoria|replace('_',' ')|capitalize }}</p>
+      <p style="line-height:1.6;white-space:pre-wrap">{{ i.descripcion }}</p>
+      {% if i.foto %}
+      <a href="/static/comprobantes/{{ i.foto }}" target="_blank">
+        <img src="/static/comprobantes/{{ i.foto }}" alt="evidencia"
+             style="max-width:220px;border-radius:8px;margin-top:0.5rem">
+      </a>
+      {% endif %}
+      {% if i.respuesta %}
+      <div class="alert alert-success" style="margin-top:0.75rem">
+        💬 <strong>Respuesta de administración:</strong> {{ i.respuesta }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="card"><div class="empty"><p>Aún no has reportado incidencias</p></div></div>
+  {% endfor %}
+</div>
+{% endblock %}

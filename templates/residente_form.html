@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if residente else 'Nuevo' }} Residente{% endblock %}
+{% block page_title %}{{ 'Editar' if residente else 'Nuevo' }} Residente{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width:700px">
+  <div class="card-header">
+    <h3>{{ '✏️ Editar Residente' if residente else '👤 Registrar Nuevo Residente' }}</h3>
+    <a href="/residentes/" class="btn btn-outline btn-sm">← Volver</a>
+  </div>
+  <div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre completo *</label>
+          <input type="text" name="nombre" value="{{ residente.nombre if residente else '' }}" required
+                 minlength="3" maxlength="80" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñÜü ]+"
+                 title="Solo letras y espacios">
+        </div>
+        <div class="form-group">
+          <label>Número de cédula *</label>
+          <input type="text" name="cedula" value="{{ residente.cedula if residente else '' }}" required
+                 inputmode="numeric" pattern="\d{10}" maxlength="10" title="10 dígitos numéricos">
+        </div>
+        <div class="form-group">
+          <label>Casa *</label>
+          <select name="casa_id" required>
+            <option value="">— Seleccionar casa —</option>
+            {% for c in casas %}
+            <option value="{{ c.id }}" {{ 'selected' if residente and residente.casa_id == c.id }}>
+              {{ c.manzana }}-{{ c.numero }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tipo *</label>
+          <select name="tipo" required>
+            <option value="propietario" {{ 'selected' if residente and residente.tipo == 'propietario' }}>Propietario</option>
+            <option value="inquilino" {{ 'selected' if residente and residente.tipo == 'inquilino' }}>Inquilino</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input type="tel" name="telefono" value="{{ residente.telefono if residente else '' }}"
+                 inputmode="numeric" pattern="\d{7,10}" maxlength="10" title="Entre 7 y 10 dígitos">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" value="{{ residente.email if residente else '' }}" maxlength="50">
+        </div>
+        {% if not residente %}
+        <div class="form-group">
+          <label>Fecha de ingreso</label>
+          <input type="date" name="fecha_ingreso" value="{{ now[:10] if now else '' }}">
+        </div>
+        {% endif %}
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">
+          {{ '💾 Actualizar' if residente else '✅ Registrar Residente' }}
+        </button>
+        <a href="/residentes/" class="btn btn-outline">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

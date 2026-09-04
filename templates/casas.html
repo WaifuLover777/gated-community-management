@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Casas{% endblock %}
+{% block page_title %}Casas y Unidades{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <p class="text-muted">Total: {{ casas|length }} unidades registradas</p>
+  <a href="/residentes/casas/nueva" class="btn btn-primary">+ Nueva Casa</a>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>N° Casa</th><th>Manzana</th><th>Área m²</th><th>Alícuota $</th><th>Residentes</th><th>Personas</th><th>Capacidad</th><th>Estado</th><th>PIN registro</th><th>Acciones</th></tr>
+      </thead>
+      <tbody>
+        {% for c in casas %}
+        <tr>
+          <td><strong>{{ c.numero }}</strong></td>
+          <td>{{ c.manzana or '—' }}</td>
+          <td>{{ c.area_m2 or '—' }}</td>
+          <td>${{ "%.2f"|format(c.alicuota) }}</td>
+          <td>{{ c.num_residentes }}</td>
+          <td>
+            {% if c.personas is not none %}
+              <span class="badge badge-teal">{{ c.personas }}</span>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if c.capacidad %}
+              {% if c.num_residentes >= c.capacidad %}
+                <span class="badge badge-red">{{ c.capacidad }} (llena)</span>
+              {% else %}
+                <span class="badge badge-gray">{{ c.num_residentes }}/{{ c.capacidad }}</span>
+              {% endif %}
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if c.estado == 'ocupada' %}
+              <span class="badge badge-green">Ocupada</span>
+            {% else %}
+              <span class="badge badge-gray">Desocupada</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if c.pin_registro %}
+              <span class="badge badge-amber" style="font-family:monospace;font-size:0.8rem">{{ c.pin_registro }}</span>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <a href="/residentes/casas/editar/{{ c.id }}" class="btn btn-outline btn-sm">✏️ Editar</a>
+              <form method="POST" action="/residentes/casas/{{ c.id }}/pin" style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline btn-sm"
+                        onclick="return confirm('Esto generará un nuevo PIN de registro de un solo uso para esta villa. ¿Continuar?')">
+                  🔑 {{ 'Regenerar PIN' if c.pin_registro else 'Generar PIN' }}
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

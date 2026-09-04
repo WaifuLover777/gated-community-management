@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Comunicados{% endblock %}
+{% block page_title %}Comunicados y Anuncios{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4" style="flex-wrap:wrap;gap:0.75rem">
+  <form class="filters" method="GET" style="margin:0">
+    <div class="form-group">
+      <label>Tipo</label>
+      <select name="tipo" onchange="this.form.submit()">
+        <option value="">Todos</option>
+        <option value="anuncio" {{ 'selected' if tipo=='anuncio' }}>Anuncios</option>
+        <option value="circular" {{ 'selected' if tipo=='circular' }}>Circulares</option>
+        <option value="urgente" {{ 'selected' if tipo=='urgente' }}>Urgentes</option>
+        <option value="evento" {{ 'selected' if tipo=='evento' }}>Eventos</option>
+      </select>
+    </div>
+  </form>
+  <a href="/comunicados/nuevo" class="btn btn-primary">+ Nuevo Comunicado</a>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:1rem">
+  {% for c in comunicados %}
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        {% if c.tipo == 'urgente' %}
+          <span class="badge badge-red">🚨 Urgente</span>
+        {% elif c.tipo == 'evento' %}
+          <span class="badge badge-blue">📅 Evento</span>
+        {% elif c.tipo == 'circular' %}
+          <span class="badge badge-purple">📄 Circular</span>
+        {% else %}
+          <span class="badge badge-gray">📢 Anuncio</span>
+        {% endif %}
+        <h3>{{ c.titulo }}</h3>
+        {% if c.programado %}
+        <span class="badge badge-amber">🕒 Programado {{ c.fecha_publicacion|dt('%d/%m %H:%M') }}</span>
+        {% endif %}
+      </div>
+      <div class="flex gap-2">
+        <a href="/comunicados/editar/{{ c.id }}" class="btn btn-outline btn-sm">✏️ Editar</a>
+        <a href="/comunicados/archivar/{{ c.id }}"
+           onclick="return confirm('¿Archivar este comunicado?')"
+           class="btn btn-danger btn-sm">Archivar</a>
+      </div>
+    </div>
+    <div class="card-body">
+      <p style="line-height:1.6;white-space:pre-wrap">{{ c.contenido }}</p>
+      <p class="text-sm text-muted mt-4" style="margin-top:0.75rem">
+        {% if c.programado %}Se publicará el {{ c.fecha_publicacion|dt('%Y-%m-%d %H:%M') }}
+        {% else %}Publicado el {{ c.fecha_publicacion|dt('%Y-%m-%d') }}{% endif %}
+        por {{ c.publicado_por or 'Admin' }}
+      </p>
+    </div>
+  </div>
+  {% else %}
+  <div class="card"><div class="empty"><p>No hay comunicados activos</p></div></div>
+  {% endfor %}
+</div>
+{% endblock %}

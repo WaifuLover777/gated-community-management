@@ -1,0 +1,111 @@
+{% extends "portal/base_portal.html" %}
+{% block title %}Mis Cuotas{% endblock %}
+{% block page_title %}Mis Cuotas y Pagos{% endblock %}
+{% block content %}
+
+{% if deuda and deuda.total > 0 %}
+<div class="card mb-4" style="border-left:4px solid var(--err)">
+  <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+    <div>
+      <p class="text-muted text-sm" style="margin:0">Tu deuda total pendiente</p>
+      <p style="font-size:1.8rem;font-weight:700;color:var(--err);margin:0.2rem 0">${{ "%.2f"|format(deuda.total) }}</p>
+      <p class="text-sm text-muted" style="margin:0">
+        {{ deuda.num_cuotas }} cuota(s) · pendiente ${{ "%.2f"|format(deuda.pendiente) }}
+        · vencido ${{ "%.2f"|format(deuda.vencido) }}
+        {% if deuda.recargo > 0 %} · mora ${{ "%.2f"|format(deuda.recargo) }}{% endif %}
+        {% if deuda.multas > 0 %} · multas ${{ "%.2f"|format(deuda.multas) }}{% endif %}
+      </p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header">
+    <h3>💰 Historial de Cuotas — Casa {{ residente.manzana }}-{{ residente.casa_numero }}</h3>
+  </div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr><th>Concepto</th><th>Mes</th><th>Año</th><th>Monto</th><th>Estado</th><th>Fecha Pago</th><th>Método</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for c in cuotas %}
+        <tr>
+          <td>
+            {% if c.tipo == 'extraordinaria' %}
+              <span class="badge badge-amber" title="Cuota extraordinaria">⚡ {{ c.concepto }}</span>
+            {% else %}
+              <span class="text-muted text-sm">Alícuota</span>
+            {% endif %}
+          </td>
+          <td>{{ meses[c.mes] }}</td>
+          <td>{{ c.anio }}</td>
+          <td>
+            <strong>${{ "%.2f"|format(c.monto) }}</strong>
+            {% if c.recargo_calc and c.recargo_calc > 0 %}
+              <div class="text-sm" style="color:var(--err)">+ ${{ "%.2f"|format(c.recargo_calc) }} mora</div>
+              <div class="text-sm"><strong>Total ${{ "%.2f"|format(c.total) }}</strong></div>
+            {% endif %}
+          </td>
+          <td>
+            {% if c.estado == 'pagado' %}<span class="badge badge-green">✅ Pagado</span>
+            {% elif c.estado == 'vencido' %}<span class="badge badge-red">⚠️ Vencido</span>
+            {% elif c.estado == 'en_revision' %}<span class="badge badge-teal">🔎 En revisión</span>
+            {% else %}<span class="badge badge-amber">⏳ Pendiente</span>{% endif %}
+          </td>
+          <td class="text-muted">{{ c.fecha_pago or '—' }}</td>
+          <td class="text-muted">{{ c.metodo_pago or '—' }}</td>
+          <td>
+            {% if c.estado in ('pendiente', 'vencido') %}
+              <a href="/portal/cuotas/{{ c.id }}/pagar" class="btn btn-primary btn-sm">💳 Pagar</a>
+            {% else %}
+              <span class="text-muted" style="font-size:0.8rem">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8"><div class="empty"><p>No hay cuotas registradas aún</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if multas %}
+<div class="card mt-4">
+  <div class="card-header"><h3>⚖️ Multas y sanciones</h3></div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr><th>Motivo</th><th>Fecha</th><th>Monto</th><th>Estado</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for m in multas %}
+        <tr>
+          <td>{{ m.motivo }}{% if m.descripcion %}<div class="text-sm text-muted">{{ m.descripcion }}</div>{% endif %}</td>
+          <td>{{ m.fecha }}</td>
+          <td><strong>${{ "%.2f"|format(m.monto) }}</strong></td>
+          <td>
+            {% if m.estado == 'pagada' %}<span class="badge badge-green">✅ Pagada</span>
+            {% elif m.estado == 'anulada' %}<span class="badge badge-gray">🚫 Anulada</span>
+            {% else %}<span class="badge badge-red">⏳ Pendiente</span>{% endif %}
+          </td>
+          <td>
+            {% if m.estado == 'pendiente' %}
+              <form method="POST" action="/portal/multas/{{ m.id }}/pagar" style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary btn-sm">💳 Pagar</button>
+              </form>
+            {% else %}
+              <span class="text-muted" style="font-size:0.8rem">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
