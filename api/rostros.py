@@ -7,6 +7,7 @@ from modules.garita import services
 @limiter.limit("60 per minute")
 def identificar_rostros():
     """Identifica ocupantes a partir de una imagen (multipart 'imagen')."""
+    archivo = request.files.get("imagen")
     if not archivo or not archivo.filename:
         return jsonify({"ok": False, "mensaje": "Falta la imagen"}), 200
     res = services.procesar_rostros(archivo.read(),

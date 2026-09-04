@@ -103,6 +103,7 @@ def _registrar_cli(app):
     @app.cli.command("purgar-evidencia")
     def purgar_evidencia():
         """Borra fotos de evidencia de accesos según la política de retención."""
+        from modules.garita import services
         n = services.purgar_evidencia()
         print(f"Evidencia purgada: {n} registro(s).")
 
